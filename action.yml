@@ -37,7 +37,7 @@ runs:
           exit 0
         fi
 
-        unsigned_commits="$(curl -s "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$GITHUB_PR/commits" | jq '.[] | select(.commit.verification.verified == false) | .commit.message')"
+        unsigned_commits="$(curl -s -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$GITHUB_PR/commits" | jq '.[] | select(.commit.verification.verified == false) | .commit.message')"
         if [[ -n "$unsigned_commits" ]]; then
           echo "Found unsigned commits:"
           echo "$unsigned_commits"
