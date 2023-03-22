@@ -1,0 +1,53 @@
+name: Check Signed Commits in PR
+branding: 
+  icon: check
+  color: blue
+inputs:
+  token:
+    description: GitHub token to comment on the PR
+    default: ${{ github.token }}
+  comment:
+    description: The comment to place in the PR
+    default: |
+      ⚠️ This PR contains unsigned commits. To get your PR merged, please sign those commits (`git commit -S --amend --no-edit`) and force push them to this branch (`git push --force-with-lease`).
+
+      Fortunately, [setting up commit signing](https://developer.1password.com/docs/ssh/git-commit-signing/) has become really easy using 1Password! 🎉
+
+      For a demo, see the video below:
+
+      <a href="https://www.youtube.com/watch?feature=player_embedded&v=BMFvhl0WRFQ" target="_blank">
+        <img src="https://img.youtube.com/vi/BMFvhl0WRFQ/hqdefault.jpg" alt="Watch the demo" width=400 />
+      </a>
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+        COMMENT_TEXT: ${{ inputs.comment }}
+        COMMENTS_URL: ${{ github.event.pull_request.comments_url }}
+      run: |
+        # Escape double quotes and newlines
+        COMMENT_TEXT="$(echo "$COMMENT_TEXT" | sed 's/"/\\"/g' | awk '{printf "%s\\n", $0}')"
+
+        GITHUB_PR=$(echo $GITHUB_REF | sed -n 's/refs\/pull\/\([0-9]*\)\/merge/\1/p')
+        if [[ -z "$GITHUB_PR" ]]; then
+          echo "No PR found to scan for commits."
+          exit 0
+        fi
+
+        unsigned_commits="$(curl -s "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$GITHUB_PR/commits" | jq '.[] | select(.commit.verification.verified == false) | .commit.message')"
+        if [[ -n "$unsigned_commits" ]]; then
+          echo "Found unsigned commits:"
+          echo "$unsigned_commits"
+
+          curl -X POST $COMMENTS_URL \
+            -H "Content-Type: application/json" \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            --data "{ \"body\": \"$COMMENT_TEXT\" }"
+
+          exit 1
+        fi
+
+        echo "No unsigned commits found 🎉"
