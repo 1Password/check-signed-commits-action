@@ -1,4 +1,5 @@
 name: Check Signed Commits in PR
+description: Ensure PRs don't contain unsigned commits and help getting started with commit signing.
 branding: 
   icon: check
   color: blue
