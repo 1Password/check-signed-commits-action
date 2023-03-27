@@ -19,3 +19,15 @@ jobs:
       - name: Check signed commits in PR
         uses: 1Password/check-signed-commits-action@v1
 ```
+
+## Change PR Comment
+
+The comment that will be placed in the PR upon detecting unsigned commits can be changed using the `comment` field:
+
+```yml
+- name: Check signed commits in PR
+  uses: 1Password/check-signed-commits-action@v1
+  with:
+    comment: |
+      Customized comment in the PR
+```
