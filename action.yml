@@ -39,7 +39,7 @@ inputs:
       <summary><b>Sign commits with 1Password</b></summary>
       <p></p>
 
-      You can also sign commits using [1Password](https://developer.1password.com/docs/ssh/git-commit-signing/):
+      You can also sign commits using [1Password](https://developer.1password.com/docs/ssh/git-commit-signing/), which lets you sign commits with biometrics without the signing key leaving the local 1Password process:
 
       <a href="https://www.youtube.com/watch?feature=player_embedded&v=BMFvhl0WRFQ" target="_blank">
         <img src="https://img.youtube.com/vi/BMFvhl0WRFQ/hqdefault.jpg" alt="Watch the demo" width=380 />
