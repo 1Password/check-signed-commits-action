@@ -1,6 +1,6 @@
 # Check signed commits in PR
 
-A GitHub Action that checks the commits of the current PR and fails if there are 1 or more unsigned commits. It also adds a comment to the PR that links to the [1Password Commit Signing docs](https://developer.1password.com/docs/ssh/git-commit-signing/).
+A GitHub Action that checks the commits of the current PR and fails if it contains unsigned commits. It also places a comment in the PR to inform the author about next steps.
 
 ## Usage
 
