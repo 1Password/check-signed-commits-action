@@ -1,0 +1,83 @@
+name: Check Signed Commits in PR
+branding: 
+  icon: check
+  color: blue
+inputs:
+  token:
+    description: GitHub token to comment on the PR
+    default: ${{ github.token }}
+  comment:
+    description: The comment to place in the PR
+    default: |
+      ⚠️ This PR contains unsigned commits. To get your PR merged, please sign those commits (`git commit -S --amend --no-edit`) and force push them to this branch (`git push --force-with-lease`).
+
+      If you're new to commit signing, there are different ways to set it up:
+
+      <details>
+      <summary><b>Sign commits with <code>gpg</code></b></summary>
+      <p></p>
+
+      Follow the steps below to set up commit signing with `gpg`:
+      1. [Generate a GPG key](https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key)
+      2. [Add the GPG key to your GitHub account](https://docs.github.com/en/authentication/managing-commit-signature-verification/adding-a-gpg-key-to-your-github-account)
+      3. [Configure `git` to use your GPG key for commit signing](https://docs.github.com/en/authentication/managing-commit-signature-verification/telling-git-about-your-signing-key#telling-git-about-your-gpg-key)
+
+      </details>
+
+      <details>
+      <summary><b>Sign commits with <code>ssh-agent</code></b></summary>
+      <p></p>
+
+      Follow the steps below to set up commit signing with `ssh-agent`:
+      1. [Generate an SSH key and add it to `ssh-agent`](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
+      2. [Add the SSH key to your GitHub account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
+      3. [Configure `git` to use your SSH key for commit signing](https://docs.github.com/en/authentication/managing-commit-signature-verification/telling-git-about-your-signing-key#telling-git-about-your-ssh-key)
+
+      </details>
+
+      <details>
+      <summary><b>Sign commits with 1Password</b></summary>
+      <p></p>
+
+      You can also sign commits using 1Password, which lets you sign commits with biometrics without the signing key leaving the local 1Password process.
+
+      Learn how to [use 1Password to sign your commits](https://developer.1password.com/docs/ssh/git-commit-signing/).
+
+      <a href="https://www.youtube.com/watch?feature=player_embedded&v=BMFvhl0WRFQ" target="_blank">
+        <img src="https://img.youtube.com/vi/BMFvhl0WRFQ/hqdefault.jpg" alt="Watch the demo" width=380 />
+      </a>
+
+      </details>
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+        COMMENT_TEXT: ${{ inputs.comment }}
+        COMMENTS_URL: ${{ github.event.pull_request.comments_url }}
+      run: |
+        # Escape double quotes and newlines
+        COMMENT_TEXT="$(echo "$COMMENT_TEXT" | sed 's/"/\\"/g' | awk '{printf "%s\\n", $0}')"
+
+        GITHUB_PR=$(echo $GITHUB_REF | sed -n 's/refs\/pull\/\([0-9]*\)\/merge/\1/p')
+        if [[ -z "$GITHUB_PR" ]]; then
+          echo "No PR found to scan for commits."
+          exit 0
+        fi
+
+        unsigned_commits="$(curl -s -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$GITHUB_PR/commits" | jq '.[] | select(.commit.verification.verified == false) | .commit.message')"
+        if [[ -n "$unsigned_commits" ]]; then
+          echo "Found unsigned commits:"
+          echo "$unsigned_commits"
+
+          curl -X POST $COMMENTS_URL \
+            -H "Content-Type: application/json" \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            --data "{ \"body\": \"$COMMENT_TEXT\" }"
+
+          exit 1
+        fi
+
+        echo "No unsigned commits found 🎉"
