@@ -6,18 +6,32 @@ A GitHub Action that checks the commits of the current PR and fails if it contai
 
 ```yml
 name: Check signed commits in PR 
-on: pull_request
+on: pull_request_target
 
 jobs:
-  build:
-    name: Check signed commits in PR 
+  check-signed-commits:
+    name: Check signed commits in PR
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
-      - name: Check out code
-        uses: actions/checkout@v4
-
       - name: Check signed commits in PR
         uses: 1Password/check-signed-commits-action@v1
+```
+
+## `pull_request_target` vs. `pull_request`
+
+Workflows containing this action can be configured to run both on [`pull_request`](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request) events as on [`pull_request_target`](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request_target) events.
+
+The reason to prefer `pull_request_target` over `pull_request` is to allow the action to post comments on external PRs created from forks. The GitHub token that comes with the regular `pull_request` event does not support commenting on PRs in the upstream repo.
+
+ When using `pull_request_target`, make sure to set the right permissions in the workflow:
+
+```yml
+permissions:
+  contents: read
+  pull-requests: write
 ```
 
 ## Change PR Comment
