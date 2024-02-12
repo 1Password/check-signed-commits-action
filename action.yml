@@ -10,7 +10,7 @@ inputs:
   comment:
     description: The comment to place in the PR
     default: |
-      ⚠️ This PR contains unsigned commits. To get your PR merged, please sign those commits (`git commit -S --amend --no-edit`) and force push them to this branch (`git push --force-with-lease`).
+      ⚠️ This PR contains unsigned commits. To get your PR merged, please sign those commits (`git rebase --exec 'git commit -S --amend --no-edit -n' @{upstream}`) and force push them to this branch (`git push --force-with-lease`).
 
       If you're new to commit signing, there are different ways to set it up:
 
