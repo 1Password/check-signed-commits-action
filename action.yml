@@ -65,7 +65,7 @@ runs:
           exit 1
         fi
 
-        unsigned_commits="$(curl -s -H "Authorization: token $GITHUB_TOKEN" "$COMMITS_URL" | jq '.[] | select(.commit.verification.verified == false) | .commit.message')"
+        unsigned_commits="$(curl -sSf -H "Authorization: token $GITHUB_TOKEN" "$COMMITS_URL" | jq '.[] | select(.commit.verification.verified == false) | .commit.message')"
         if [[ -z "$unsigned_commits" ]]; then
           echo "🎉 No unsigned commits found"
           exit 0
@@ -77,7 +77,7 @@ runs:
         if [[ -n "$COMMENTS_URL" ]]; then
           echo "⏱️ Checking if comment with commit signing instructions was already posted in PR"
 
-          if curl -sf -H "Authorization: token $GITHUB_TOKEN" "$COMMENTS_URL" | jq -e --arg comment_text "$(echo "$COMMENT_TEXT" | tr -cd '[:alnum:]')" 'any(.[]; .body | gsub("[^[:alnum:]]"; "") == $comment_text)'; then
+          if curl -sSf -H "Authorization: token $GITHUB_TOKEN" "$COMMENTS_URL" | jq -e --arg comment_text "$(echo "$COMMENT_TEXT" | tr -cd '[:alnum:]')" 'any(.[]; .body | gsub("[^[:alnum:]]"; "") == $comment_text)'; then
             echo "✅ Comment already exists in PR, not posting it again"
           else
             echo "📤 Posting PR comment with commit signing instructions"
@@ -85,7 +85,7 @@ runs:
             # Escape double quotes and newlines in comment
             COMMENT_TEXT="$(echo "$COMMENT_TEXT" | sed 's/"/\\"/g' | awk '{printf "%s\\n", $0}')"
 
-            curl -X POST "$COMMENTS_URL" \
+            curl -sSf -X POST "$COMMENTS_URL" \
               -H "Content-Type: application/json" \
               -H "Authorization: token $GITHUB_TOKEN" \
               --data "{ \"body\": \"$COMMENT_TEXT\" }"
