@@ -45,3 +45,5 @@ The comment that will be placed in the PR upon detecting unsigned commits can be
     comment: |
       Customized comment in the PR
 ```
+
+*By accessing or using 1Password Developer Tools, you agree to the [API and SDK Terms of Service](https://1password.com/legal/api-sdk-terms-of-service).*
